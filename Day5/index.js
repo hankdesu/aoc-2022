@@ -2,20 +2,47 @@ import fs from 'fs/promises';
 
 const inputBuffer = await fs.readFile('input.txt');
 const inputString = inputBuffer.toString();
-const operations = inputString.split('\n');
+const lines = inputString.split('\n');
+const stacks = [];
+let stop = true;
+let lineNum = 0;
+
+while (stop) {
+  const line = lines[lineNum];
+  lineNum += 1;
+  if (line === '') {
+    stop = false;
+    break;
+  }
+  const arr = line.split('');
+  const tolerance = Math.round(line.length / 4);
+  const formatArr = [];
+  for (let index = 0; index < tolerance; index += 1) {
+    const elements = arr.splice(0, 4);
+    formatArr.push(elements);
+  }
+  stacks.push(formatArr);
+}
+stacks.pop();
+
+const crates = stacks.reverse().reduce((acc, cur) => {
+  cur.forEach((arr, index) => {
+    if (arr[1] && arr[1] !== ' ') {
+      if (acc[index + 1]) {
+        acc[index + 1].push(arr[1]);
+      } else {
+        acc[index + 1] = [arr[1]];
+      }
+    }
+  });
+  return acc;
+}, {});
+
+const seperateIndex = lines.findIndex((val) => val === '');
+const operations = lines.slice(seperateIndex + 1);
 
 function partOne() {
-  const crates = {
-    1: ['N', 'S', 'D', 'C', 'V', 'Q', 'T'],
-    2: ['M', 'F', 'V'],
-    3: ['F', 'Q', 'W', 'D', 'P', 'N', 'H', 'M'],
-    4: ['D', 'Q', 'R', 'T', 'F'],
-    5: ['R', 'F', 'M', 'N', 'Q', 'H', 'V', 'B'],
-    6: ['C', 'F', 'G', 'N', 'P', 'W', 'Q'],
-    7: ['W', 'F', 'R', 'L', 'C', 'T'],
-    8: ['T', 'Z', 'N', 'S'],
-    9: ['M', 'S', 'D', 'J', 'R', 'Q', 'H', 'N'],
-  };
+  const newCrates = JSON.parse(JSON.stringify(crates));
   const rearrangedCrates = operations.reduce((acc, cur) => {
     const parseActionRegex = /move (\d+) from (\d+) to (\d+)/g;
     const [, crateNums, sourceStack, targetStack] = parseActionRegex.exec(cur);
@@ -24,8 +51,11 @@ function partOne() {
       acc[targetStack].push(sourceCrate);
     }
     return acc;
-  }, { ...crates });
-  const topCrates = Object.keys(rearrangedCrates).reduce((acc, cur) => `${acc}${rearrangedCrates[cur].pop()}`, '');
+  }, newCrates);
+  const topCrates = Object.keys(rearrangedCrates).reduce(
+    (acc, cur) => `${acc}${rearrangedCrates[cur].pop()}`,
+    '',
+  );
 
   return topCrates;
 }
@@ -34,25 +64,19 @@ const partOneAns = partOne();
 console.log('partOneAns: ', partOneAns);
 
 function partTwo() {
-  const crates = {
-    1: ['N', 'S', 'D', 'C', 'V', 'Q', 'T'],
-    2: ['M', 'F', 'V'],
-    3: ['F', 'Q', 'W', 'D', 'P', 'N', 'H', 'M'],
-    4: ['D', 'Q', 'R', 'T', 'F'],
-    5: ['R', 'F', 'M', 'N', 'Q', 'H', 'V', 'B'],
-    6: ['C', 'F', 'G', 'N', 'P', 'W', 'Q'],
-    7: ['W', 'F', 'R', 'L', 'C', 'T'],
-    8: ['T', 'Z', 'N', 'S'],
-    9: ['M', 'S', 'D', 'J', 'R', 'Q', 'H', 'N'],
-  };
+  const newCrates = JSON.parse(JSON.stringify(crates));
+
   const rearrangedCrates = operations.reduce((acc, cur) => {
     const parseActionRegex = /move (\d+) from (\d+) to (\d+)/g;
     const [, crateNums, sourceStack, targetStack] = parseActionRegex.exec(cur);
     const sourceCrates = acc[sourceStack].splice(acc[sourceStack].length - crateNums, crateNums);
     acc[targetStack].push(...sourceCrates);
     return acc;
-  }, { ...crates });
-  const topCrates = Object.keys(rearrangedCrates).reduce((acc, cur) => `${acc}${rearrangedCrates[cur].pop()}`, '');
+  }, newCrates);
+  const topCrates = Object.keys(rearrangedCrates).reduce(
+    (acc, cur) => `${acc}${rearrangedCrates[cur].pop()}`,
+    '',
+  );
 
   return topCrates;
 }
